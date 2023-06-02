@@ -21,14 +21,18 @@ import ru.bmstu.distrib.pojo.SelectInstructionPojo;
 public class Client {
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("start");
-        PrepareCommitResult prepareCommitResult = sendPrepareCommit();
-        sendShouldCommit(prepareCommitResult);
+        processForHost("vlad333rrty.sas.yp-c.yandex.net");
     }
 
-    public static void sendShouldCommit(PrepareCommitResult prepareCommitResult) throws IOException {
+    private static void processForHost(String host) throws IOException, InterruptedException {
+        PrepareCommitResult prepareCommitResult = sendPrepareCommit(host);
+        sendShouldCommit(prepareCommitResult, host);
+    }
+
+    public static void sendShouldCommit(PrepareCommitResult prepareCommitResult, String host) throws IOException {
         String transactionId = prepareCommitResult.transactionId;
         if (prepareCommitResult.operationResult == OperationResult.OK) {
-            try (Socket socket = new Socket("localhost", 8081);
+            try (Socket socket = new Socket(host, 8081);
                  var os = new DataOutputStream(socket.getOutputStream()))
             {
                 byte[] bytes = Utils.concat(Utils.intToByteArray(transactionId.length()), transactionId.getBytes());
@@ -36,7 +40,7 @@ public class Client {
                 os.flush();
             }
         } else {
-            try (Socket socket = new Socket("localhost", 8082);
+            try (Socket socket = new Socket(host, 8082);
                  var os = new DataOutputStream(socket.getOutputStream()))
             {
                 byte[] bytes = Utils.concat(Utils.intToByteArray(transactionId.length()), transactionId.getBytes());
@@ -47,9 +51,9 @@ public class Client {
     }
 
 
-    public static PrepareCommitResult sendPrepareCommit() throws IOException, InterruptedException {
+    public static PrepareCommitResult sendPrepareCommit(String host) throws IOException, InterruptedException {
         ObjectMapper objectMapper = new ObjectMapper();
-        try (Socket socket = new Socket("localhost", 8080);
+        try (Socket socket = new Socket(host, 8080);
              var os = new DataOutputStream(socket.getOutputStream());
              var in = new DataInputStream(socket.getInputStream()))
         {

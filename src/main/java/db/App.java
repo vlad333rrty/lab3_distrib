@@ -2,6 +2,8 @@ package db;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import db.backup.TransactionLogManager;
 import db.backup.UncommittedTransactionsSolver;
@@ -23,14 +25,15 @@ import db.transaction.TransactionLocksTable;
  */
 public class App {
     private final DBMSController dbmsController;
+    private final Consumer<String> rollbackUncommittedTransaction;
 
-    public App(DBMSController dbmsController) {
+    public App(DBMSController dbmsController, Consumer<String> rollbackUncommittedTransaction) {
         this.dbmsController = dbmsController;
+        this.rollbackUncommittedTransaction = rollbackUncommittedTransaction;
     }
 
     public static App getInstance(Path dbPath) throws DBMSException {
-        DBMSController controller = prepareConfiguration(dbPath);
-        return new App(controller);
+        return prepareConfiguration(dbPath);
     }
 
     public void run(Transaction transaction) throws Exception {
@@ -41,10 +44,12 @@ public class App {
         dbmsController.commitTransaction(transactionId);
     }
 
-    public void rollbackUncommittedTransaction(String transactionId) {}
+    public void rollbackUncommittedTransaction(String transactionId) {
+        rollbackUncommittedTransaction.accept(transactionId);
+    }
 
 
-    private static DBMSController prepareConfiguration(Path dbPath) throws DBMSException {
+    private static App prepareConfiguration(Path dbPath) throws DBMSException {
         DBReader reader = new DBReader(dbPath);
         TableInfoHolder tableInfoHolder = reader.recoverTables();
 
@@ -106,10 +111,18 @@ public class App {
                 updateInstructionExecutor
         );
 
-        return new DBMSController(
+        var controller = new DBMSController(
                 executionManager,
                 locksTable,
                 transactionLogger
         );
+
+        return new App(controller, id -> {
+            try {
+                uncommittedTransactionsSolver.rollbackUncommittedTransaction(dbPath, transactionsLogsPath, id);
+            } catch (DBMSException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
