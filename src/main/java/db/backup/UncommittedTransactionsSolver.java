@@ -82,7 +82,6 @@ public class UncommittedTransactionsSolver {
             Map<String, List<DataPage>> tableName2ModifiedPages,
             Set<String> canceledTransactions)
     {
-        String rowFqdn = logEntry.getBeforeValue().fqdn();
         List<DataPage> pages = tableInfoHolder.getTableContents(logEntry.getTableName()).getPages();
         int pageId =  Integer.parseInt(logEntry.getPageId());
         DataPage modifiedPage = pages.stream()
@@ -93,12 +92,14 @@ public class UncommittedTransactionsSolver {
         if (logEntry.getInstructionType().equals(Instruction.Type.DELETE.name())) {
             rows.add(logEntry.getBeforeValue());
         } else if (logEntry.getInstructionType().equals(Instruction.Type.INSERT.name())) {
+            String rowFqdn = logEntry.getAfterValue().fqdn();
             int pos = IntStream.range(0, rows.size())
                     .filter(i -> rows.get(i).fqdn().equals(rowFqdn))
                     .findFirst()
                     .orElseThrow();
             rows.remove(pos); // todo
         } else if (logEntry.getInstructionType().equals(Instruction.Type.UPDATE.name())) {
+            String rowFqdn = logEntry.getAfterValue().fqdn();
             int pos = IntStream.range(0, rows.size())
                     .filter(i -> rows.get(i).fqdn().equals(rowFqdn))
                     .findFirst()

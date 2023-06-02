@@ -10,10 +10,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.bmstu.distrib.Utils;
 import ru.bmstu.distrib.pojo.AttributeConditionPojo;
 import ru.bmstu.distrib.pojo.DeleteInstructionPojo;
+import ru.bmstu.distrib.pojo.InsertInstructionPojo;
 import ru.bmstu.distrib.pojo.InstructionPojo;
 import ru.bmstu.distrib.pojo.InstructionPojoType;
 import ru.bmstu.distrib.pojo.OperationResult;
 import ru.bmstu.distrib.pojo.SelectInstructionPojo;
+import ru.bmstu.distrib.pojo.ValuesTuplePojo;
 
 /**
  * @author vlad333rrty
@@ -21,17 +23,24 @@ import ru.bmstu.distrib.pojo.SelectInstructionPojo;
 public class Client {
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("start");
-        processForHost("vlad333rrty.sas.yp-c.yandex.net");
+        PrepareCommitResult r1 = processForHost("vlad333rrty.sas.yp-c.yandex.net");
+        PrepareCommitResult r2 = processForHost("localhost");
+
+        if (r1.operationResult == OperationResult.OK && r2.operationResult == OperationResult.OK) {
+            sendShouldCommit(r1.transactionId, "vlad333rrty.sas.yp-c.yandex.net", true);
+            sendShouldCommit(r2.transactionId, "localhost", true);
+        } else {
+            sendShouldCommit(r1.transactionId, "vlad333rrty.sas.yp-c.yandex.net", false);
+            sendShouldCommit(r2.transactionId, "localhost", false);
+        }
     }
 
-    private static void processForHost(String host) throws IOException, InterruptedException {
-        PrepareCommitResult prepareCommitResult = sendPrepareCommit(host);
-        sendShouldCommit(prepareCommitResult, host);
+    private static PrepareCommitResult processForHost(String host) throws IOException, InterruptedException {
+        return sendPrepareCommit(host);
     }
 
-    public static void sendShouldCommit(PrepareCommitResult prepareCommitResult, String host) throws IOException {
-        String transactionId = prepareCommitResult.transactionId;
-        if (prepareCommitResult.operationResult == OperationResult.OK) {
+    public static void sendShouldCommit(String transactionId, String host, boolean shouldCommit) throws IOException {
+        if (shouldCommit) {
             try (Socket socket = new Socket(host, 8081);
                  var os = new DataOutputStream(socket.getOutputStream()))
             {
@@ -82,14 +91,16 @@ public class Client {
 
     private static List<InstructionPojo> getInstructionPojo() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        DeleteInstructionPojo op = new DeleteInstructionPojo(
+
+        InsertInstructionPojo instructionPojo = new InsertInstructionPojo(
                 "test",
-                List.of(new AttributeConditionPojo("x", 2))
+                List.of(new ValuesTuplePojo(List.of(1337, 2)))
         );
         var select = new SelectInstructionPojo("test", List.of("x"), List.of());
-        byte[] data = objectMapper.writeValueAsBytes(op);
+        byte[] data = objectMapper.writeValueAsBytes(instructionPojo);
         byte[] selectBytes = objectMapper.writeValueAsBytes(select);
         return List.of(
+                new InstructionPojo(InstructionPojoType.INSERT, data),
                 new InstructionPojo(InstructionPojoType.SELECT, selectBytes)
         );
     }
