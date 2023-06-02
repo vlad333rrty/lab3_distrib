@@ -1,7 +1,10 @@
 plugins {
     id 'java'
+    id 'application'
     id 'org.springframework.boot' version '3.0.6'
 }
+
+mainClassName = 'src/main/java/ru/bmstu/distrib/RequestHandler.java'
 
 apply plugin: 'io.spring.dependency-management'
 

@@ -23,9 +23,14 @@ public class TransactionLogManager {
         TransactionLogEntrySerializer.INSTANCE.serialize(logEntry, transactionLogPath.resolve(transactionId + ".json"));
     }
 
-    public void commit(Transaction transaction) throws IOException {
-        Path transactionLog = transactionLogPath.resolve(transaction.id() + ".json");
+    public void commit(String transactionId) throws IOException {
+        Path transactionLog = transactionLogPath.resolve(transactionId + ".json");
         Files.deleteIfExists(transactionLog);
+    }
+
+    public boolean canCommit(Transaction transaction) {
+        Path transactionLog = transactionLogPath.resolve(transaction.id() + ".json");
+        return Files.exists(transactionLog);
     }
 
     public void removeLog(String transactionId) throws IOException {

@@ -49,7 +49,6 @@ public class DeleteInstructionExecutor extends InstructionExecutor<DeleteInstruc
 
     @Override
     public void execute(DeleteInstruction instruction, String ownerTransactionId) throws DBMSException {
-        int qwe = 0/0;
         String tableName = instruction.getTableName();
         TableMetaInfo metaInfo = tableInfoHolder.getMetaInfo(tableName);
 

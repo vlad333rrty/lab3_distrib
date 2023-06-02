@@ -35,11 +35,9 @@ public class DBMSController {
             instructionsExecutionManager.executeInstruction(instruction, transaction.id());
         }
         locksTable.unlockAll(transaction.id());
-        try {
-            transactionLogger.commit(transaction);
-        } catch (IOException e) {
-            throw new DBMSException("Failed to commit transaction", e);
-        }
-        logger.info("Transaction {} completed successfully", transaction.id());
+    }
+
+    public void commitTransaction(String transactionId) throws IOException {
+        transactionLogger.commit(transactionId);
     }
 }

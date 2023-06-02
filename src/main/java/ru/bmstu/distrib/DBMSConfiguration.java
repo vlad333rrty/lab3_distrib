@@ -13,6 +13,9 @@ import ru.bmstu.distrib.request.RequestSendStrategy;
 public class DBMSConfiguration {
     @Bean
     public RequestSendStrategy requestSendStrategy() {
-        return new RequestSendStrategy(List.of());
+        return new RequestSendStrategy(List.of(
+                "localhost",
+                "vlad333rrty.sas.yp-c.yandex.net"
+        ));
     }
 }

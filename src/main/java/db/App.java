@@ -1,5 +1,6 @@
 package db;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import db.backup.TransactionLogManager;
@@ -35,6 +36,13 @@ public class App {
     public void run(Transaction transaction) throws Exception {
         dbmsController.handleTransaction(transaction);
     }
+
+    public void commitTransaction(String transactionId) throws IOException {
+        dbmsController.commitTransaction(transactionId);
+    }
+
+    public void rollbackUncommittedTransaction(String transactionId) {}
+
 
     private static DBMSController prepareConfiguration(Path dbPath) throws DBMSException {
         DBReader reader = new DBReader(dbPath);

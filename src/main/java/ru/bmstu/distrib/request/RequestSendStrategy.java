@@ -7,6 +7,8 @@ import java.util.Random;
  * @author vlad333rrty
  */
 public class RequestSendStrategy {
+    private static final int DEFAULT_PORT = 8080;
+
     private final List<String> availableHosts;
     private final Random ran;
 
@@ -16,6 +18,6 @@ public class RequestSendStrategy {
     }
 
     public String getAddress() {
-        return availableHosts.get(ran.nextInt(availableHosts.size()));
+        return "http://%s:%d".formatted(availableHosts.get(ran.nextInt(availableHosts.size())), DEFAULT_PORT);
     }
 }
