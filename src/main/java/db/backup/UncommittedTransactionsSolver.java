@@ -46,6 +46,9 @@ public class UncommittedTransactionsSolver {
             Path transactionLogPath,
             Predicate<String> filter) throws DBMSException
     {
+        if (!Files.exists(transactionLogPath)) {
+            return;
+        }
         Map<String, List<DataPage>> tableName2ModifiedPages = new HashMap<>();
         Set<String> canceledTransactions = new HashSet<>();
         try (Stream<Path> logs = Files.list(transactionLogPath)) {
